@@ -1,0 +1,90 @@
+formatVersion: 1
+inputs:
+  diskProperties:
+    type: array
+    minItems: 0
+    maxItems: 10
+    items:
+      type: object
+      properties:
+        size:
+          type: integer
+        SCSIController:
+          type: string
+          title: SCSI Controller
+          enum:
+            - SCSI_Controller_0
+            - SCSI_Controller_1
+            - SCSI_Controller_2
+            - SCSI_Controller_3
+        unitNumber:
+          type: integer
+          title: Unit Number (optional)
+        driveLetter:
+          type: string
+          title: Drive Letter (optional)
+        driveLabel:
+          type: string
+          title: Drive Label (optional)
+  memoryProperties:
+    type: integer
+    title: Memory in MB
+  cpuProperties:
+    type: integer
+    title: CPU
+  windowsFeaturesProperties:
+    type: array
+    minItems: 0
+    items:
+      type: object
+      properties:
+        feature:
+          type: string
+          title: Windows Feature
+          enum:
+            - IIS
+            - IIS Management Tools
+            - IIS All Sub features
+  image:
+    type: string
+    title: Image
+    enum:
+      - Windows Server 2022 Core
+      - Windows Server 2022 Desktop
+resources:
+  Cloud_Ansible_1:
+    type: Cloud.Ansible
+    properties:
+      host: ${resource.Cloud_Machine_1.*}
+      osType: windows
+      account: Kjell Computer Ansible
+      username: administrator
+      password: ${secret.Ansible-Password}
+      groups:
+        - Windows
+      playbooks:
+        provision:
+          - /etc/ansible/playbooks/install_net_framework_core.yaml
+  Cloud_Machine_1:
+    type: Cloud.vSphere.Machine
+    properties:
+      image: ${input.image}
+      totalMemoryMB: ${input.memoryProperties}
+      cpuCount: ${input.cpuProperties}
+      customizationSpec: Windows Server 2022
+      networks:
+        - network: ${resource.Cloud_vSphere_Network_1.id}
+          assignment: static
+      attachedDisks: ${map_to_object(resource.disk[*].id, "source")}
+  Cloud_vSphere_Network_1:
+    type: Cloud.vSphere.Network
+    properties:
+      networkType: existing
+  disk:
+    type: Cloud.vSphere.Disk
+    allocatePerInstance: true
+    properties:
+      capacityGb: ${input.diskProperties[count.index].size}
+      SCSIController: ${input.diskProperties[count.index].SCSIController}
+      unitNumber: ${input.diskProperties[count.index].unitNumber}
+      count: ${length(input.diskProperties)}
