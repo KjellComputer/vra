@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getDirectoryPathFromFilePath" result-type="string" api-version="6.0.0" id="ae5a3cc4-9cb8-4b06-9cf0-3c898ba40dc1" version="0.0.0" allowed-operations="evf" category-name="com.vmware.pso.helpers">
+  <param n="filepath" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[//Try for linux path
+var m = filepath.match("^(.*)/([^/]*)$");
+
+//Try for windows path
+if(m == null)
+	m = filepath.match("^(.*)\\\\([^\\\\]*)$");
+
+if(m == null || m.length < 2)
+	return null;
+
+return m[1];]]></script>
+</dunes-script-module>

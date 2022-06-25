@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="testVmToolsForGuestOps" result-type="boolean" api-version="6.0.0" id="377d4001-bcc0-491f-820f-1e0b98dc4138" version="0.0.0" allowed-operations="evf" category-name="com.vmware.pso.GuestOps">
+  <param n="vm" t="VC:VirtualMachine"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return vm.guest.guestOperationsReady;
+]]></script>
+</dunes-script-module>

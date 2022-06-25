@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getScriptConfigurationByName" result-type="Any" api-version="6.0.0" id="f69010f2-03fc-4960-9010-1d287afe0f17" version="0.0.1" allowed-operations="evf" category-name="com.vmware.coe.copyAndRunScriptsInGuest">
+  <param n="scriptsConfiguration" t="Array/CompositeType(scriptName:string,resourceElement:ResourceElement,interactiveSession:boolean,programPath:string,arguments:string,workingDirectory:string):scriptConfiguration"><![CDATA[]]></param>
+  <param n="scriptConfigurationName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[
+for each (var scriptConfiguration in scriptsConfiguration) {
+	if (scriptConfiguration.get("scriptName") == scriptConfigurationName) return scriptConfiguration;
+}]]></script>
+</dunes-script-module>

@@ -1,0 +1,577 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="456e0e30-d0f8-477e-83b6-402d572b2460" version="0.5.1" api-version="6.0.0" allowed-operations="evf" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Add Ordered Mountpoints]]></display-name>
+  <description><![CDATA[Copyright 2020 VMware, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHE]]></description>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <attrib name="vm" type="VC:VirtualMachine" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="err_0" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="resourceElement" type="ResourceElement" read-only="false">
+    <value encoded="n"><![CDATA[dunes://service.dunes.ch/ResourceElement?id='805d73f7-3409-480a-bc7e-2723ec7971cd'&dunesName='ResourceElement']]></value>
+  </attrib>
+  <attrib name="scriptConfigurationProperties" type="Properties" read-only="false">
+    <value encoded="n"><![CDATA[{}]]></value>
+  </attrib>
+  <attrib name="scriptType" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptContent" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptTimeOut" type="number" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptInteractiveSession" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="scriptWorkingDirectory" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="copyResource" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="resourceToCopy" type="ResourceElement" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="resourceSearchReplace" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="deleteResourceAfterRun" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="scriptRefreshTime" type="number" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="username" type="string" read-only="false" conf-id="c7b06df1-f131-4cf1-ad5d-a18062cc92e8" conf-key="linuxUsername">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="password" type="SecureString" read-only="false" conf-id="c7b06df1-f131-4cf1-ad5d-a18062cc92e8" conf-key="linuxPassword"/>
+  <attrib name="scriptInputs" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptOutputText" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptExitCode" type="number" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptFilename" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraUsername" type="string" read-only="false" conf-id="e7d56f72-f98c-42eb-8bc0-49f993c03755" conf-key="userName">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraPassword" type="SecureString" read-only="false" conf-id="e7d56f72-f98c-42eb-8bc0-49f993c03755" conf-key="password"/>
+  <attrib name="isWindows" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="windowsScriptResource" type="ResourceElement" read-only="false">
+    <value encoded="n"><![CDATA[dunes://service.dunes.ch/ResourceElement?id='484d5a9a-6615-4246-a46e-0847dd5bcf2d'&dunesName='ResourceElement']]></value>
+  </attrib>
+  <attrib name="linuxScriptResource" type="ResourceElement" read-only="false">
+    <value encoded="n"><![CDATA[dunes://service.dunes.ch/ResourceElement?id='805d73f7-3409-480a-bc7e-2723ec7971cd'&dunesName='ResourceElement']]></value>
+  </attrib>
+  <attrib name="linuxUsername" type="string" read-only="false" conf-id="c7b06df1-f131-4cf1-ad5d-a18062cc92e8" conf-key="linuxUsername">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="linuxPassword" type="SecureString" read-only="false" conf-id="c7b06df1-f131-4cf1-ad5d-a18062cc92e8" conf-key="linuxPassword"/>
+  <attrib name="windowsUsername" type="string" read-only="false" conf-id="c7b06df1-f131-4cf1-ad5d-a18062cc92e8" conf-key="windowsUsername">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="windowsPassword" type="SecureString" read-only="false" conf-id="c7b06df1-f131-4cf1-ad5d-a18062cc92e8" conf-key="windowsPassword"/>
+  <attrib name="vraRestHost" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vmName" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="diskNames" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[[]]]></value>
+  </attrib>
+  <attrib name="mountpoints" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[[]]]></value>
+  </attrib>
+  <attrib name="resourceNames" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[[]]]></value>
+  </attrib>
+  <attrib name="deploymentId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <workflow-note x="203.0" y="37.0" w="319.0" h="72.0" color="86f25f">
+    <description><![CDATA[Initialize Workflow]]></description>
+  </workflow-note>
+  <workflow-note x="202.0" y="109.0" w="190.0" h="142.0" color="FFFFC0">
+    <description><![CDATA[Re-order mountpoints / Drive letters according to order in vCenter instead of order on the input request form]]></description>
+  </workflow-note>
+  <workflow-note x="421.0" y="108.5" w="100.0" h="142.0" color="FFFFC0"/>
+  <workflow-note x="391.0" y="108.5" w="130.0" h="142.0" color="FFFFC0">
+    <description><![CDATA[.]]></description>
+  </workflow-note>
+  <workflow-note x="203.0" y="251.0" w="321.0" h="123.0" color="4db1ef">
+    <description><![CDATA[Prepare to copy the script ]]></description>
+  </workflow-note>
+  <workflow-note x="202.0" y="374.5" w="321.0" h="59.0" color="FFFFC0">
+    <description><![CDATA[Run the script]]></description>
+  </workflow-note>
+  <workflow-note x="202.0" y="37.5" w="319.0" h="71.0" color="58ec55">
+    <description><![CDATA[Initialize Workflow]]></description>
+  </workflow-note>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="450.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item11" type="task">
+    <display-name><![CDATA[Parse Payload]]></display-name>
+    <script encoded="false"><![CDATA[var resourceNames = inputProperties["resourceNames"];
+vmName = resourceNames[0];
+System.log("vmName: "+vmName)
+
+deploymentId = inputProperties.deploymentId
+
+var customProperties = inputProperties["customProperties"];
+if(customProperties.image == "Windows")
+    isWindows = true
+
+
+
+
+]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+      <bind name="vraUsername" type="string" export-name="vraUsername"/>
+      <bind name="vraPassword" type="SecureString" export-name="vraPassword"/>
+      <bind name="vraRestHost" type="string" export-name="vraRestHost"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptInputs" type="string" export-name="scriptInputs"/>
+      <bind name="isWindows" type="boolean" export-name="isWindows"/>
+      <bind name="vmName" type="string" export-name="vmName"/>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item3" out-name="item4" type="task" script-module="com.vmware.coe.library.resourceElements/getResourceElementProperties">
+    <display-name><![CDATA[Get Script content and run properties]]></display-name>
+    <script encoded="false"><![CDATA[//Auto generated script, cannot be modified !
+actionResult = System.getModule("com.vmware.coe.library.resourceElements").getResourceElementProperties(resourceElement);
+]]></script>
+    <in-binding>
+      <bind name="resourceElement" type="ResourceElement" export-name="resourceElement"/>
+    </in-binding>
+    <out-binding>
+      <bind name="actionResult" type="Properties" export-name="scriptConfigurationProperties"/>
+    </out-binding>
+    <description><![CDATA[Add a note to the workflow schema.]]></description>
+    <position y="260.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item4" out-name="item9" type="task">
+    <display-name><![CDATA[Get script configuration]]></display-name>
+    <script encoded="false"><![CDATA[scriptType = scriptConfigurationProperties.get("scriptType");
+scriptContent = scriptConfigurationProperties.get("scriptContent");
+scriptTimeOut = scriptConfigurationProperties.get("scriptTimeOut");
+scriptRefreshTime = scriptConfigurationProperties.get("scriptRefreshTime");
+scriptInteractiveSession = scriptConfigurationProperties.get("scriptInteractiveSession");
+scriptWorkingDirectory = scriptConfigurationProperties.get("scriptWorkingDirectory");
+copyResource = scriptConfigurationProperties.get("copyResource");
+resourceToCopy = scriptConfigurationProperties.get("resourceToCopy");
+deleteResourceAfterRun = scriptConfigurationProperties.get("deleteResourceAfterRun");
+resourceSearchReplace = scriptConfigurationProperties.get("resourceSearchReplace");
+
+//System.debug(scriptContent)
+]]></script>
+    <in-binding>
+      <bind name="scriptConfigurationProperties" type="Properties" export-name="scriptConfigurationProperties"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptType" type="string" export-name="scriptType"/>
+      <bind name="scriptContent" type="string" export-name="scriptContent"/>
+      <bind name="scriptTimeOut" type="number" export-name="scriptTimeOut"/>
+      <bind name="scriptInteractiveSession" type="boolean" export-name="scriptInteractiveSession"/>
+      <bind name="scriptWorkingDirectory" type="string" export-name="scriptWorkingDirectory"/>
+      <bind name="copyResource" type="boolean" export-name="copyResource"/>
+      <bind name="resourceToCopy" type="ResourceElement" export-name="resourceToCopy"/>
+      <bind name="resourceSearchReplace" type="boolean" export-name="resourceSearchReplace"/>
+      <bind name="deleteResourceAfterRun" type="boolean" export-name="deleteResourceAfterRun"/>
+      <bind name="scriptRefreshTime" type="number" export-name="scriptRefreshTime"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="320.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item7" out-name="item0" type="task">
+    <display-name><![CDATA[Dump output]]></display-name>
+    <script encoded="false"><![CDATA[System.log("scriptExitCode: "+scriptExitCode)
+System.log("scriptOutputText: "+scriptOutputText)]]></script>
+    <in-binding>
+      <bind name="scriptOutputText" type="string" export-name="scriptOutputText"/>
+      <bind name="scriptExitCode" type="number" export-name="scriptExitCode"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="390.0" x="379.0"/>
+  </workflow-item>
+  <workflow-item name="item8" out-name="item7" type="link" linked-workflow-id="f8cd5692-92a0-46b6-a98d-53ffd878d779">
+    <display-name><![CDATA[Run Script In Guest]]></display-name>
+    <in-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual Machine (VC)]]></description>
+      </bind>
+      <bind name="username" type="string" export-name="username">
+        <description><![CDATA[Guest OS username]]></description>
+      </bind>
+      <bind name="password" type="SecureString" export-name="password">
+        <description><![CDATA[Guest OS password]]></description>
+      </bind>
+      <bind name="scriptType" type="string" export-name="scriptType">
+        <description><![CDATA[bash / bat / powershell]]></description>
+      </bind>
+      <bind name="script" type="string" export-name="scriptFilename">
+        <description><![CDATA[Script Text]]></description>
+      </bind>
+      <bind name="scriptTimeout" type="number" export-name="scriptTimeOut">
+        <description><![CDATA[Timeout for the running script (in second)]]></description>
+      </bind>
+      <bind name="scriptRefreshTime" type="number" export-name="scriptRefreshTime">
+        <description><![CDATA[(default) Time (in seconds) where a check of script status occurs]]></description>
+      </bind>
+      <bind name="scriptWorkingDirectory" type="string" export-name="scriptWorkingDirectory">
+        <description><![CDATA[Script working directory in the guest]]></description>
+      </bind>
+      <bind name="interactiveSession" type="boolean" export-name="scriptInteractiveSession">
+        <description><![CDATA[Script context interactivity]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptOutputText" type="string" export-name="scriptOutputText">
+        <description><![CDATA[Output of the script]]></description>
+      </bind>
+      <bind name="scriptExitCode" type="number" export-name="scriptExitCode">
+        <description><![CDATA[Exit code of the script]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="390.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item9" out-name="item8" type="task">
+    <display-name><![CDATA[Copy script to guest]]></display-name>
+    <script encoded="false"><![CDATA[// Create local copy of script file
+if(isWindows){
+    vcoPath = "/var/run/vco/diskmount.ps1"
+    scriptFilename = "C:\\Windows\\Temp\\diskmount.ps1"
+}
+else{
+    vcoPath = "/var/run/vco/diskmount.sh"
+    scriptFilename = "/tmp/diskmount.sh"
+}
+
+
+
+//FileWriter constructor 
+var myFileWriter = new FileWriter(vcoPath);
+//open the file for writing
+myFileWriter.open();
+//Empties existing file. Without it we append 
+myFileWriter.clean();
+//write without line feed
+myFileWriter.write(scriptContent);
+//Close the file
+myFileWriter.close();
+
+// Copy local copy to guest /tmp folder
+var host = vm.sdkConnection;
+
+var guestOperationsManager = host.guestOperationsManager;
+var guestAuth = new VcNamePasswordAuthentication();
+guestAuth.username = username;
+guestAuth.password = password;
+
+var fileManager = guestOperationsManager.fileManager;
+result = false;
+
+var attr = new VcGuestFileAttributes();
+var posixattrs = new VcGuestPosixFileAttributes();
+posixattrs.permissions=0744;
+
+var srcFile = new File(vcoPath);
+var uri = fileManager.initiateFileTransferToGuest(vm , guestAuth ,scriptFilename, attr, srcFile.length, true);
+result = fileManager.putFile(vcoPath, uri);
+
+if(!isWindows)
+    fileManager.changeFileAttributesInGuest(vm, guestAuth, scriptFilename, posixattrs)
+
+scriptFilename += scriptInputs
+]]></script>
+    <in-binding>
+      <bind name="scriptContent" type="string" export-name="scriptContent"/>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm"/>
+      <bind name="username" type="string" export-name="username"/>
+      <bind name="password" type="SecureString" export-name="password"/>
+      <bind name="isWindows" type="boolean" export-name="isWindows"/>
+      <bind name="scriptInputs" type="string" export-name="scriptInputs"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptFilename" type="string" export-name="scriptFilename"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="320.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item10" out-name="item3" type="task">
+    <display-name><![CDATA[Choose script and params by OS type]]></display-name>
+    <script encoded="false"><![CDATA[if(isWindows){
+    resourceElement = windowsScriptResource
+    username = windowsUsername
+    password = windowsPassword
+}
+else{    
+    resourceElement = linuxScriptResource
+    username = linuxUsername
+    password = linuxPassword
+}]]></script>
+    <in-binding>
+      <bind name="isWindows" type="boolean" export-name="isWindows"/>
+      <bind name="windowsScriptResource" type="ResourceElement" export-name="windowsScriptResource"/>
+      <bind name="linuxScriptResource" type="ResourceElement" export-name="linuxScriptResource"/>
+      <bind name="linuxUsername" type="string" export-name="linuxUsername"/>
+      <bind name="linuxPassword" type="SecureString" export-name="linuxPassword"/>
+      <bind name="windowsUsername" type="string" export-name="windowsUsername"/>
+      <bind name="windowsPassword" type="SecureString" export-name="windowsPassword"/>
+    </in-binding>
+    <out-binding>
+      <bind name="resourceElement" type="ResourceElement" export-name="resourceElement"/>
+      <bind name="username" type="string" export-name="username"/>
+      <bind name="password" type="SecureString" export-name="password"/>
+    </out-binding>
+    <description><![CDATA[windows runs powershell
+linux runs bash]]></description>
+    <position y="260.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item11" out-name="item12" type="task">
+    <display-name><![CDATA[Get VM by Name]]></display-name>
+    <script encoded="false"><![CDATA[
+found = false
+vm = null;
+var sdkConnections = VcPlugin.allSdkConnections;
+for each (var sdkConnection in sdkConnections) {
+    for each(var vm in sdkConnection.allVirtualMachines){
+        if(vm.name == vmName){
+            System.debug("found vm: "+vm.name); 
+            found = true;
+            break;
+        }
+    }
+    if(found)
+        break;
+}
+
+if(!found)
+    throw "Could not find vm \'"+vmName+"\' in vCenter"
+]]></script>
+    <in-binding>
+      <bind name="vmName" type="string" export-name="vmName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item12" out-name="item13" type="task">
+    <display-name><![CDATA[Get ordered disk names]]></display-name>
+    <script encoded="false"><![CDATA[
+diskNames = []
+
+System.log("***********************************************************")
+System.log("********* vCenter VM devices and backing ******************")
+System.log("********* Accumulate the ordered list of disk devices *****")
+System.log("***********************************************************")
+for each (dev in vm.config.hardware.device)
+{
+    ///////////////////////////////////////////
+    // Accumulate the ordered list of disk devices
+    if(dev.deviceInfo.label.indexOf("Hard disk") > -1){
+
+        lhs = dev.backing.fileName.split('.vmdk')[0]
+        rhs = lhs.split('/')[1]
+        if(rhs != vmName){
+            System.log("***********************************************************")
+            //System.log(dev.deviceInfo.label)
+            System.log(dev.backing.fileName)
+            System.log(rhs)
+            //System.log(dev.backing)
+            diskNames.push(rhs)
+        }
+    }
+}]]></script>
+    <in-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm"/>
+      <bind name="vmName" type="string" export-name="vmName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="diskNames" type="Array/string" export-name="diskNames"/>
+    </out-binding>
+    <description><![CDATA[Get the disk names in the order that vCenter created them.]]></description>
+    <position y="120.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item13" out-name="item14" type="task">
+    <display-name><![CDATA[Get ordered mountpoints/drive letters]]></display-name>
+    <script encoded="false"><![CDATA[
+mountpoints = []
+resourceNames = []
+
+////////////////////////////////////////////////////////////////
+// REST calls for Resource Information
+////////////////////////////////////////////////////////////////
+
+var authParams = ['Shared Session', vraUsername, vraPassword]; 
+var authenticationObject = RESTAuthenticationManager.createAuthentication("Basic", authParams);
+vraRestHost.authentication = authenticationObject;
+
+////////////////////////////////////////////////////////////////
+// Get Bearer Token
+var content = '{ "username":"'+vraUsername+'", "password":"'+vraPassword+'" }'
+System.log("Get Authentication token for "+vraRestHost.url)
+var request = vraRestHost.createRequest('POST','/csp/gateway/am/idp/auth/login?access_token=abc',content)
+request.setHeader("Content-Type","application/json");
+var response = request.execute();
+
+if(response.statusCode == 200){
+    accessToken = JSON.parse(response.contentAsString).access_token;
+
+    ///////////////////////////////////////////
+    // Get all the resources for the deployment
+    ///////////////////////////////////////////
+    var request = vraRestHost.createRequest('GET','/deployment/api/deployments/'+deploymentId+'/resources',"")
+    request.setHeader("Accept","application/json");
+    request.setHeader("Authorization","Bearer "+accessToken); 
+    var response = request.execute();
+
+    System.debug(response.statusCode)
+    System.log("***********************************************************")
+    System.log("********* Interrogate the Deployment Resources*************")
+    System.log("********* Get Original Attached Disks *********************")
+    System.log("***********************************************************")
+    if(response.statusCode == 200){
+        json = JSON.parse(response.contentAsString)
+
+        for each(resource in json.content){
+            System.log("***********************************************************")
+            if(resource.type == "Cloud.vSphere.Disk"){
+                System.debug("found: "+resource.properties.resourceName)
+                resourceNames.push(resource.properties.resourceName)
+            }
+        }
+    }
+    else{
+        msg = "GET Resources failed with status code: "+response.statusCode+" Error: "+response.contentAsString
+        System.error("vRAAddOrderedMountpoints: "+msg)
+        throw msg
+    }
+
+    System.log("***********************************************************")
+    System.log("********* Interrogate just the Deployment *****************")
+    System.log("********* Get Original Attached Disks *********************")
+    System.log("***********************************************************")
+    var request = vraRestHost.createRequest('GET','/deployment/api/deployments/'+deploymentId,"")
+    request.setHeader("Accept","application/json");
+    request.setHeader("Authorization","Bearer "+accessToken); 
+    var response = request.execute();
+
+    System.debug(response.statusCode)
+    if(response.statusCode == 200){
+        json = JSON.parse(response.contentAsString)
+
+        for each (disk in json.inputs.disks){
+            //System.log(disk.size +" : "+ disk.mountpoint)
+            mountpoints.push(disk.mountpoint)
+        }
+    }
+}
+
+]]></script>
+    <in-binding>
+      <bind name="vraRestHost" type="string" export-name="vraRestHost"/>
+      <bind name="vraUsername" type="string" export-name="vraUsername"/>
+      <bind name="vraPassword" type="SecureString" export-name="vraPassword"/>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+      <bind name="vmName" type="string" export-name="vmName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="mountpoints" type="Array/string" export-name="mountpoints"/>
+      <bind name="resourceNames" type="Array/string" export-name="resourceNames"/>
+    </out-binding>
+    <description><![CDATA[Get ordered of the mountpoints/drive letters from the deployment as input on the request form.]]></description>
+    <position y="190.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item14" out-name="item10" type="task">
+    <display-name><![CDATA[Order mountpoints/Drive Letters like vCenter]]></display-name>
+    <script encoded="false"><![CDATA[
+System.log("***********************************************************")
+System.log("********* Re-order inputs based on disk order *************")
+System.log("***********************************************************")
+
+for each(resourceName in resourceNames)
+    System.log("resourceName: "+resourceName)
+    
+
+if (isWindows)
+    scriptInputs = " -mounts \""
+else 
+    scriptInputs = " "
+
+labels = ""
+j=0
+for each (diskName in diskNames){
+    i = 0
+    System.log("diskName: "+diskName)
+    for each(resourceName in resourceNames){
+        //System.log("resourceName: "+resourceName)
+        if(resourceName == diskName){
+            if(j>0){
+                scriptInputs += isWindows ? "," : " "
+                labels += ","
+            }
+            
+            scriptInputs += mountpoints[i]
+            labels += mountpoints[i]+"-Drive"
+            break
+        }
+        i++
+    }
+    j++
+}
+
+if(isWindows)
+    scriptInputs += "\" -label \""+labels+ "\""
+
+
+System.log("***********************************************************")
+System.log("********* Order mountpoints / Drive letters****************")
+System.log(scriptInputs)
+System.log("***********************************************************")
+]]></script>
+    <in-binding>
+      <bind name="resourceNames" type="Array/string" export-name="resourceNames"/>
+      <bind name="diskNames" type="Array/string" export-name="diskNames"/>
+      <bind name="mountpoints" type="Array/string" export-name="mountpoints"/>
+      <bind name="isWindows" type="boolean" export-name="isWindows"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptInputs" type="string" export-name="scriptInputs"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="190.0" x="380.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

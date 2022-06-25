@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getOtherResourceElementNames" result-type="Array/string" api-version="6.0.0" id="a49a8678-07e6-4246-a8f2-69e238bd4af5" version="0.0.1" allowed-operations="evf" category-name="com.vmware.coe.library.resourceElements">
+  <description><![CDATA[Get the other resource element names in the category of the resource elements passed as input]]></description>
+  <param n="resource" t="ResourceElement"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (resource == null) return null;
+var allElements = resource.getResourceElementCategory().resourceElements;
+
+var elementNames = new Array();
+
+for each (var element in allElements) {
+	if (element != resource) elementNames.push(element.name);
+}
+
+return elementNames;]]></script>
+</dunes-script-module>

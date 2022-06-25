@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getResourceElementAttributeWithKeyByResourceElementName" result-type="Any" api-version="6.0.0" id="0eaa1cf3-c9f9-41ec-8cc2-da4e8729cfcf" version="0.0.1" allowed-operations="evf" category-name="com.vmware.coe.library.resourceElements">
+  <description><![CDATA[Get the key value from stored in a resource element. A resource element in the resource element category need to be set as the first parameter]]></description>
+  <param n="resourceElementInCategory" t="ResourceElement"><![CDATA[]]></param>
+  <param n="resourceElementName" t="string"><![CDATA[]]></param>
+  <param n="key" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (resourceElementName == null) return null;
+if (resourceElementInCategory == null) return null;
+var resourceElementCategory = resourceElementInCategory.getResourceElementCategory();
+var resourceElement = System.getModule("com.vmware.coe.library.resourceElements").getOrCreateResourceElement(resourceElementCategory,resourceElementName) ;
+return System.getModule("com.vmware.coe.library.resourceElements").getResourceElementAttributeWithKey(resourceElement,key);]]></script>
+</dunes-script-module>

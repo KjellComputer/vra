@@ -1,0 +1,936 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item13" object-name="workflow:name=generic" id="f8cd5692-92a0-46b6-a98d-53ffd878d779" version="0.1.4" api-version="6.0.0" allowed-operations="evf" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Run Script In Guest]]></display-name>
+  <description><![CDATA[Run a script inside the VM and wait until it returns his result.
+Retrieve the output of the script and returns it as output in the workflow
+
+Inspired by implementation done in PowerCLI in the following .NET class :
+- VMware.VimAutomation.ViCore.Impl.V1.RunScriptInGuestHelper
+- VMware.VimAutomation.ViCore.Impl.V1.Service.VmGuestServiceImpl
+
+Requires running VMwareTools instance in the GuestOS.
+Leverages the vSphere 5.x GuestOperationsManager object and is not backwards compatible with previous versions of vSphere.]]></description>
+  <position y="18.136363636363633" x="45.0"/>
+  <input>
+    <param name="vm" type="VC:VirtualMachine">
+      <description><![CDATA[Virtual Machine (VC)]]></description>
+    </param>
+    <param name="username" type="string">
+      <description><![CDATA[Guest OS username]]></description>
+    </param>
+    <param name="password" type="SecureString">
+      <description><![CDATA[Guest OS password]]></description>
+    </param>
+    <param name="scriptType" type="string">
+      <description><![CDATA[bash / bat / powershell]]></description>
+    </param>
+    <param name="script" type="string">
+      <description><![CDATA[Script Text]]></description>
+    </param>
+    <param name="scriptTimeout" type="number">
+      <description><![CDATA[Timeout for the running script (in second)]]></description>
+    </param>
+    <param name="scriptRefreshTime" type="number">
+      <description><![CDATA[(default) Time (in seconds) where a check of script status occurs]]></description>
+    </param>
+    <param name="scriptWorkingDirectory" type="string">
+      <description><![CDATA[Script working directory in the guest]]></description>
+    </param>
+    <param name="interactiveSession" type="boolean">
+      <description><![CDATA[Script context interactivity]]></description>
+    </param>
+  </input>
+  <output>
+    <param name="scriptOutputText" type="string">
+      <description><![CDATA[Output of the script]]></description>
+    </param>
+    <param name="scriptExitCode" type="number">
+      <description><![CDATA[Exit code of the script]]></description>
+    </param>
+  </output>
+  <attrib name="errorMessage" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[(internal) Error Message]]></description>
+  </attrib>
+  <attrib name="scriptArguments" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[(internal) Script arguments]]></description>
+  </attrib>
+  <attrib name="scriptProgramPath" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[(internal) Path to the scripting process]]></description>
+  </attrib>
+  <attrib name="scriptPid" type="number" read-only="false">
+    <value encoded="n"><![CDATA[__NULL__]]></value>
+    <description><![CDATA[(internal) Pid of the script cmd in the guest]]></description>
+  </attrib>
+  <attrib name="scriptProcessInfo" type="Array/CompositeType(pid:number,name:string,owner:string,cmdLine:string,startTime:Date,endTime:Date,exitCode:number):GuestProcessInfoType" read-only="false">
+    <value encoded="n"><![CDATA[__NULL__]]></value>
+    <description><![CDATA[(internal) List of running processes in the guest]]></description>
+  </attrib>
+  <attrib name="scriptFinished" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+    <description><![CDATA[(internal) Flag when script is finished]]></description>
+  </attrib>
+  <attrib name="scriptTimeoutCounter" type="number" read-only="false">
+    <value encoded="n"><![CDATA[0.0]]></value>
+    <description><![CDATA[(internal) Counter for timeout]]></description>
+  </attrib>
+  <attrib name="scriptOutputFile" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[(internal) File path where the script output will be written in the guest]]></description>
+  </attrib>
+  <attrib name="scriptOutputPrefix" type="string" read-only="false">
+    <value encoded="n"><![CDATA[vco_]]></value>
+    <description><![CDATA[(default) The prefix to be given to the new temporary file]]></description>
+  </attrib>
+  <attrib name="vcoCopiedFileResult" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+    <description><![CDATA[(internal) True if copy operation was successful]]></description>
+  </attrib>
+  <attrib name="vcoTempFile" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[(internal) vCO server temporary file path]]></description>
+  </attrib>
+  <attrib name="cmdAnsi" type="ResourceElement" read-only="false">
+    <value encoded="n"><![CDATA[dunes://service.dunes.ch/ResourceElement?id='352d998c-6af5-4af9-8c4f-da4a2a2dff2b'&dunesName='ResourceElement']]></value>
+    <description><![CDATA[Redirects cmd output to ANSI. Thanks to Pierre Torris www.ptorris.com]]></description>
+  </attrib>
+  <attrib name="cmdAnsiVcoPath" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="cmdAnsiGuestPath" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[Guest file path]]></description>
+  </attrib>
+  <attrib name="overwrite" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[true]]></value>
+    <description><![CDATA[Overwrite file if exists]]></description>
+  </attrib>
+  <attrib name="useCmdAnsi" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[true]]></value>
+  </attrib>
+  <attrib name="powershellScriptGuestPath" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[The absolute path of the temporary file that is created.]]></description>
+  </attrib>
+  <attrib name="powershellScript" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="powershellScriptVcoPath" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="powershellSuffix" type="string" read-only="false">
+    <value encoded="n"><![CDATA[.ps1]]></value>
+    <description><![CDATA[The suffix to be given to the new temporary file]]></description>
+  </attrib>
+  <attrib name="errorCode" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="guestTempDirectory" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+    <description><![CDATA[The absolute path of the temporary directory that is created.]]></description>
+  </attrib>
+  <attrib name="recirsive" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[true]]></value>
+    <description><![CDATA[Delete directory content recursively]]></description>
+  </attrib>
+  <attrib name="delay" type="number" read-only="false">
+    <value encoded="n"><![CDATA[__NULL__]]></value>
+    <description><![CDATA[Time to wait (seconds)]]></description>
+  </attrib>
+  <workflow-note x="120.0" y="18.181818181818173" w="1400.0" h="172.72727272727272" color="b0ebb0ff">
+    <description><![CDATA[Script Preparation]]></description>
+  </workflow-note>
+  <workflow-note x="1820.0" y="18.181818181818187" w="240.0" h="227.27272727272725" color="ebb0b0ff">
+    <description><![CDATA[Manage timeout]]></description>
+  </workflow-note>
+  <workflow-note x="1660.0" y="18.181818181818187" w="140.0" h="227.27272727272725" color="b0ebebff">
+    <description><![CDATA[Script Monitoring]]></description>
+  </workflow-note>
+  <workflow-note x="1380.0" y="254.54545454545453" w="260.0" h="118.18181818181817" color="ebebebff">
+    <description><![CDATA[Cleanup]]></description>
+  </workflow-note>
+  <workflow-note x="1660.0" y="254.54545454545453" w="400.0" h="118.18181818181817" color="ebb0ebff">
+    <description><![CDATA[Retrieve output]]></description>
+  </workflow-note>
+  <workflow-item  name="item6" out-name="item31" catch-name="item38" throw-bind-name="errorCode" type="task">
+    <display-name><![CDATA[Delete file in vCO server]]></display-name>
+    <script encoded="false"><![CDATA[try {
+	var file = new File(vcoTempFile);
+	if(file.exists)
+	{	
+		file.deleteFile();
+	}
+} catch(err) {
+	System.warn("Error during deletion of the temporary file in guest OS ("+vcoTempFile+") :\n" + err);
+}]]></script>
+    <in-binding>
+      <bind name="vcoTempFile" type="string" export-name="vcoTempFile"/>
+    </in-binding>
+    <out-binding/>
+    <position y="273.59090909090907" x="1524.5"/>
+  </workflow-item >
+  <workflow-item  name="item3" out-name="item21" type="custom-condition" alt-out-name="item15">
+    <display-name><![CDATA[Bash Script?]]></display-name>
+    <script encoded="false"><![CDATA[if(scriptType.toLowerCase() == "bash") return true;
+return false;]]></script>
+    <in-binding>
+      <bind name="scriptType" type="string" export-name="scriptType"/>
+    </in-binding>
+    <position y="18.136363636363633" x="544.5"/>
+  </workflow-item >
+  <workflow-item  name="item7" out-name="item32" type="task">
+    <display-name><![CDATA[set for Bat]]></display-name>
+    <script encoded="false"><![CDATA[
+scriptProgramPath = "cmd.exe";
+
+//script = script.replace("\r\n", " & ");
+//script = script.replace("\n", " & ");
+
+script = script.replace(new RegExp("\r\n", 'g'), " & ");
+script = script.replace(new RegExp("\n", 'g'), " & ");
+
+script = "\"" + script + "\"";
+scriptArguments = "/s /c cmd >" + scriptOutputFile + " 2>&1 /s /c " + script;
+//scriptArguments = "/s /c " + script + " 2>&1 | cmdansi " + scriptOutputFile;
+]]></script>
+    <in-binding>
+      <bind name="script" type="string" export-name="script"/>
+      <bind name="scriptOutputFile" type="string" export-name="scriptOutputFile"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptArguments" type="string" export-name="scriptArguments"/>
+      <bind name="scriptProgramPath" type="string" export-name="scriptProgramPath"/>
+    </out-binding>
+    <description><![CDATA[Use the same implementation as used in PowerCLI
+(VMware.VimAutomation.ViCore.Impl.V1.RunScriptInGuestHelper)]]></description>
+    <position y="91.77272727272727" x="684.5"/>
+  </workflow-item >
+  <workflow-item  name="item5" throw-bind-name="errorCode" type="end" end-mode="1">
+    <position y="199.95454545454544" x="1564.5"/>
+  </workflow-item >
+  <workflow-item  name="item13" out-name="item41" type="custom-condition" alt-out-name="item19">
+    <display-name><![CDATA[isToolsOk ?]]></display-name>
+    <script encoded="false"><![CDATA[return System.getModule("com.vmware.pso.GuestOps").testVmToolsForGuestOps(vm);]]></script>
+    <in-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm"/>
+    </in-binding>
+    <position y="18.136363636363633" x="125.0"/>
+  </workflow-item >
+  <workflow-item  name="item14" out-name="item10" type="condition" alt-out-name="item18" comparator="0">
+    <display-name><![CDATA[isFinished ?]]></display-name>
+    <script encoded="false"><![CDATA[//Generated by the system, cannot be edited
+return (scriptFinished == true) ;]]></script>
+    <in-binding>
+      <bind name="scriptFinished" type="boolean" export-name="scriptFinished"/>
+    </in-binding>
+    <condition name="scriptFinished" type="boolean" comparator="0" label="null">false</condition>
+    <position y="199.95454545454544" x="1804.5"/>
+  </workflow-item >
+  <workflow-item  name="item16" out-name="item14" catch-name="item5" throw-bind-name="errorCode" type="task">
+    <display-name><![CDATA[Check script state]]></display-name>
+    <script encoded="false"><![CDATA[if(scriptProcessInfo && scriptProcessInfo.length > 0)
+{
+	for each(var guestProcessInfo in scriptProcessInfo)
+	{		
+		if(guestProcessInfo.pid == scriptPid)
+		{
+			if (System.getObjectType(guestProcessInfo.exitCode) != null)
+			{
+				scriptExitCode = guestProcessInfo.exitCode;
+				scriptFinished = true;
+			}
+			break;
+		}
+	}
+}
+else
+{
+	throw "Process not found";
+}
+]]></script>
+    <in-binding>
+      <bind name="scriptProcessInfo" type="Array/CompositeType(pid:number,name:string,owner:string,cmdLine:string,startTime:Date,endTime:Date,exitCode:number):GuestProcessInfoType" export-name="scriptProcessInfo"/>
+      <bind name="scriptPid" type="number" export-name="scriptPid"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptFinished" type="boolean" export-name="scriptFinished"/>
+      <bind name="scriptExitCode" type="number" export-name="scriptExitCode"/>
+    </out-binding>
+    <position y="209.95454545454544" x="1664.5"/>
+  </workflow-item >
+  <workflow-item  name="item18" out-name="item11" type="custom-condition" alt-out-name="item2">
+    <display-name><![CDATA[Timeout ?]]></display-name>
+    <script encoded="false"><![CDATA[return (scriptTimeout > scriptTimeoutCounter*scriptRefreshTime)]]></script>
+    <in-binding>
+      <bind name="scriptTimeoutCounter" type="number" export-name="scriptTimeoutCounter"/>
+      <bind name="scriptTimeout" type="number" export-name="scriptTimeout"/>
+      <bind name="scriptRefreshTime" type="number" export-name="scriptRefreshTime"/>
+    </in-binding>
+    <position y="18.136363636363633" x="1804.5"/>
+  </workflow-item >
+  <workflow-item  name="item21" out-name="item0" type="task">
+    <display-name><![CDATA[set for Linux]]></display-name>
+    <script encoded="false"><![CDATA[
+scriptProgramPath = "/bin/bash";
+
+script = script.replace("\r\n", " ; ");
+script = script.replace("\\\"", "'\"'");
+script = script.replace(/\"/g, "\\\\\\\"");
+scriptArguments = "-c \"bash > " + scriptOutputFile + " 2>&1 -c \\\"" + script + "\\\"\"";
+useCmdAnsi = false;]]></script>
+    <in-binding>
+      <bind name="script" type="string" export-name="script"/>
+      <bind name="scriptOutputFile" type="string" export-name="scriptOutputFile"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptArguments" type="string" export-name="scriptArguments"/>
+      <bind name="scriptProgramPath" type="string" export-name="scriptProgramPath"/>
+      <bind name="useCmdAnsi" type="boolean" export-name="useCmdAnsi"/>
+    </out-binding>
+    <description><![CDATA[Use the same implementation as used in PowerCLI
+(VMware.VimAutomation.ViCore.Impl.V1.RunScriptInGuestHelper)]]></description>
+    <position y="28.136363636363633" x="1384.5"/>
+  </workflow-item >
+  <workflow-item  name="item11" out-name="item37" type="task">
+    <display-name><![CDATA[Sleep / Count]]></display-name>
+    <script encoded="false"><![CDATA[//Sleep
+if ( scriptRefreshTime == null )  {
+	delay = 60;
+} else {
+	delay = scriptRefreshTime;
+}
+
+//Measure timeout
+scriptTimeoutCounter++;
+]]></script>
+    <in-binding>
+      <bind name="scriptRefreshTime" type="number" export-name="scriptRefreshTime"/>
+      <bind name="scriptTimeoutCounter" type="number" export-name="scriptTimeoutCounter"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptTimeoutCounter" type="number" export-name="scriptTimeoutCounter"/>
+      <bind name="delay" type="number" export-name="delay"/>
+    </out-binding>
+    <position y="28.136363636363633" x="1664.5"/>
+  </workflow-item >
+  <workflow-item  name="item17" out-name="item3" catch-name="item33" business-status="Create temporary file in guest" throw-bind-name="errorMessage" type="link" linked-workflow-id="C9808080808080808080808080808080DA80808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Make Temp File in VM]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="dirPath" type="string" export-name="guestTempDirectory">
+        <description><![CDATA[The complete path to the directory in which to create the new file. If unset or an empty string, a guest-specific location will be used.]]></description>
+      </bind>
+      <bind name="prefix" type="string" export-name="scriptOutputPrefix">
+        <description><![CDATA[The prefix to be given to the new temporary file]]></description>
+      </bind>
+      <bind name="suffix" type="string" explicitly-not-bound="true">
+        <description><![CDATA[The suffix to be given to the new temporary file]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="string" export-name="scriptOutputFile">
+        <description><![CDATA[The absolute path of the temporary file that is created.]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Create a temporary file in a guest virtual machine.]]></description>
+    <position y="28.136363636363633" x="404.5"/>
+  </workflow-item >
+  <workflow-item  name="item0" out-name="item11" type="link" linked-workflow-id="C98080808080808080808080808080805E80808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Start Script]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="interactiveSession" type="boolean" export-name="interactiveSession">
+        <description><![CDATA[This is set to true if the client wants an interactive session in the guest.]]></description>
+      </bind>
+      <bind name="programPath" type="string" export-name="scriptProgramPath">
+        <description><![CDATA[The absolute path to the program to start. For Linux guest operating systems, /bin/bash is used to start the program.  For Solaris guest operating systems, /bin/bash is used to start the program if it exists. Otherwise /bin/sh is used. If /bin/sh is used, then the process ID returned will be that of the shell used to start the program, rather than the program itself, due to the differences in how /bin/sh and /bin/bash work. This PID will still be usable for watching the process with this API to find its exit code and elapsed time. ]]></description>
+      </bind>
+      <bind name="arguments" type="string" export-name="scriptArguments">
+        <description><![CDATA[The arguments to the program. In Linux and Solaris guest operating systems, the program will be executed by a guest shell. This allows stdio redirection, but may also require that characters which must be escaped to the shell also be escaped on the command line provided. For Windows guest operating systems, prefixing the command with "cmd /c" can provide stdio redirection. ]]></description>
+      </bind>
+      <bind name="workingDirectory" type="string" export-name="scriptWorkingDirectory">
+        <description><![CDATA[The absolute path of the working directory for the program to be run. VMware recommends explicitly setting the working directory for the program to be run. If this value is unset or is an empty string, the behavior depends on the guest operating system. For Linux guest operating systems, if this value is unset or is an empty string, the working directory will be the home directory of the user associated with the guest authentication. For other guest operating systems, if this value is unset, the behavior is unspecified. ]]></description>
+      </bind>
+      <bind name="environment" type="Array/Any" explicitly-not-bound="true" export-name="NULL">
+        <description><![CDATA[An array of environment variables, specified in the guest OS notation (eg PATH=c:\bin;c:\windows\system32 or LD_LIBRARY_PATH=/usr/lib:/lib), to be set for the program being run. Note that these are not additions to the default environment variables; they define the complete set available to the program. If none are specified the values are guest dependent. ]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="number" export-name="scriptPid">
+        <description><![CDATA[The pid of the program started.]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Starts a program in the guest operating system.
+A process started this way can have its status queried with this API. When the process completes, its exit code and end time will be available for 5 minutes after completion.]]></description>
+    <position y="28.136363636363633" x="1524.5"/>
+  </workflow-item >
+  <workflow-item  name="item1" out-name="item16" catch-name="item40" throw-bind-name="errorCode" type="link" linked-workflow-id="C98080808080808080808080808080800180808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Get Processes]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="Array/CompositeType(pid:number,name:string,owner:string,cmdLine:string,startTime:Date,endTime:Date,exitCode:number):GuestProcessInfoType" export-name="scriptProcessInfo">
+        <description><![CDATA[The list running processes.]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[List the processes running in the guest operating system, plus those started by this API that have recently completed]]></description>
+    <position y="155.4090909090909" x="1664.5"/>
+  </workflow-item >
+  <workflow-item  name="item4" out-name="item12" type="link" linked-workflow-id="C3808080808080808080808080808080ED80808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Copy output file]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="guestFilePath" type="string" export-name="scriptOutputFile">
+        <description><![CDATA[Guest file path]]></description>
+      </bind>
+      <bind name="vcoPath" type="string" export-name="vcoTempFile">
+        <description><![CDATA[Path on vCO server]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="boolean" export-name="vcoCopiedFileResult">
+        <description><![CDATA[Set to true if copy operation was successful]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Copies the specified file from the guest filesystem to the vCO server.]]></description>
+    <position y="273.59090909090907" x="1804.5"/>
+  </workflow-item >
+  <workflow-item  name="item2" out-name="item24" type="link" linked-workflow-id="C98080808080808080808080808080807B80808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Kill Script]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="pid" type="number" export-name="scriptPid">
+        <description><![CDATA[Process ID of the process to be terminated ]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Terminates a process in the guest OS.]]></description>
+    <position y="28.136363636363633" x="1944.5"/>
+  </workflow-item >
+  <workflow-item  name="item12" out-name="item6" type="task">
+    <display-name><![CDATA[Read output file]]></display-name>
+    <script encoded="false"><![CDATA[var fr = new FileReader(vcoTempFile);
+if(fr.exists)
+{
+	fr.open();
+	scriptOutputText = fr.readAll();
+	//System.log(scriptOutputText);
+}
+else
+{
+	scriptOutputText = "error: no output"
+}
+
+fr.close();]]></script>
+    <in-binding>
+      <bind name="vcoTempFile" type="string" export-name="vcoTempFile"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptOutputText" type="string" export-name="scriptOutputText"/>
+    </out-binding>
+    <position y="273.59090909090907" x="1664.5"/>
+  </workflow-item >
+  <workflow-item  name="item15" out-name="item7" type="custom-condition" alt-out-name="item20">
+    <display-name><![CDATA[Batch script?]]></display-name>
+    <script encoded="false"><![CDATA[if(scriptType.toLowerCase() == "batch" || scriptType.toLowerCase() == "bat") return true;
+return false;]]></script>
+    <in-binding>
+      <bind name="scriptType" type="string" export-name="scriptType"/>
+    </in-binding>
+    <position y="81.77272727272727" x="544.5"/>
+  </workflow-item >
+  <workflow-item  name="item20" out-name="item34" type="custom-condition" alt-out-name="item22">
+    <display-name><![CDATA[Powershell script?]]></display-name>
+    <script encoded="false"><![CDATA[if(scriptType.toLowerCase() == "powershell") return true;
+return false;]]></script>
+    <in-binding>
+      <bind name="scriptType" type="string" export-name="scriptType"/>
+    </in-binding>
+    <position y="145.4090909090909" x="544.5"/>
+  </workflow-item >
+  <workflow-item  name="item19" out-name="item33" type="task">
+    <display-name><![CDATA[Error Message]]></display-name>
+    <script encoded="false"><![CDATA[errorMessage = "VMware Tools are not running"]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="errorMessage" type="string" export-name="errorMessage"/>
+    </out-binding>
+    <position y="219.04545454545453" x="125.0"/>
+  </workflow-item >
+  <workflow-item  name="item22" out-name="item33" type="task">
+    <display-name><![CDATA[Error Message]]></display-name>
+    <script encoded="false"><![CDATA[errorMessage = "Script Type doesn't match with 'batch' / 'powershell' / 'bash'"]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="errorMessage" type="string" export-name="errorMessage"/>
+    </out-binding>
+    <position y="219.04545454545453" x="544.5"/>
+  </workflow-item >
+  <workflow-item  name="item23" out-name="item36" type="task">
+    <display-name><![CDATA[set for Powershell]]></display-name>
+    <script encoded="false"><![CDATA[
+scriptProgramPath = "cmd.exe";
+
+var s = "powershell.exe -OutputFormat text -NonInteractive -Command '& {"+script+"}; exit $lastexitcode' > \""+scriptOutputFile+"\"; exit $lastexitcode"
+
+var trap = "trap" + "\n" + "{" + "\n" + "	Write-Error $_" + "\n" + "    exit 1" + "\n" + "}"+ "\n";
+powershellScript = trap + script;
+
+
+
+System.error(powershellScript);
+
+//need to be encoded in unicode (UTF-16LE, double-byte) base64
+//scriptArguments = "/C powershell -NonInteractive -EncodedCommand " + System.getModule("com.vmware.pso.util").encodeBase64Unicode2(s);// + " | cmdansi " + scriptOutputFile;
+
+//Future : Need to change interactive below based on choice made in script config
+scriptArguments = "/C powershell -OutputFormat text -NoProfile -NonInteractive -ExecutionPolicy unrestricted -f " + powershellScriptPath + " > \""+scriptOutputFile+"\"";
+System.error(scriptArguments);]]></script>
+    <in-binding>
+      <bind name="script" type="string" export-name="script"/>
+      <bind name="scriptOutputFile" type="string" export-name="scriptOutputFile"/>
+      <bind name="powershellScriptPath" type="string" export-name="powershellScriptGuestPath"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptArguments" type="string" export-name="scriptArguments"/>
+      <bind name="scriptProgramPath" type="string" export-name="scriptProgramPath"/>
+      <bind name="powershellScript" type="string" export-name="powershellScript"/>
+    </out-binding>
+    <description><![CDATA[Use the same implementation as used in PowerCLI
+(VMware.VimAutomation.ViCore.Impl.V1.RunScriptInGuestHelper)]]></description>
+    <position y="155.4090909090909" x="824.5"/>
+  </workflow-item >
+  <workflow-item  name="item24" out-name="item10" type="task">
+    <display-name><![CDATA[log message]]></display-name>
+    <script encoded="false"><![CDATA[System.warn("Script timeout - process has been killed");]]></script>
+    <in-binding/>
+    <out-binding/>
+    <position y="82.68181818181817" x="1944.5"/>
+  </workflow-item >
+  <workflow-item  name="item10" out-name="item26" type="task">
+    <display-name><![CDATA[Create Temp File]]></display-name>
+    <script encoded="false"><![CDATA[var tempFilename = "vcoGuest_" + System.nextUUID();
+var tempDirectory = System.getTempDirectory();
+vcoTempFile = System.appendToPath(tempDirectory , tempFilename);]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="vcoTempFile" type="string" export-name="vcoTempFile"/>
+    </out-binding>
+    <description><![CDATA[Create temporary file on vCO server]]></description>
+    <position y="209.95454545454544" x="1944.5"/>
+  </workflow-item >
+  <workflow-item  name="item28" out-name="item0" type="link" linked-workflow-id="C78080808080808080808080808080809480808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Copy cmdAnsi to VM]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="vcoPath" type="string" export-name="cmdAnsiVcoPath">
+        <description><![CDATA[Path on vCO server]]></description>
+      </bind>
+      <bind name="guestFilePath" type="string" export-name="cmdAnsiGuestPath">
+        <description><![CDATA[Guest file path]]></description>
+      </bind>
+      <bind name="overwrite" type="boolean" export-name="overwrite">
+        <description><![CDATA[Overwrite file if exists]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="boolean" export-name="vcoCopiedFileResult">
+        <description><![CDATA[Set to true if copy operation was successful]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Copy cmdAnsi from vCO to guest]]></description>
+    <position y="91.77272727272727" x="1384.5"/>
+  </workflow-item >
+  <workflow-item  name="item30" out-name="item28" type="task">
+    <display-name><![CDATA[Save cmdAnsi to vCO]]></display-name>
+    <script encoded="false"><![CDATA[var cmdAnsiVcoPath = System.getTempDirectory() + "/" + cmdAnsi.name;
+
+var cmdAnsiFile = new File(cmdAnsiVcoPath);
+
+if (cmdAnsiFile.exists == true) {
+	System.log(cmdAnsi.name + " already exist on vCO server : " + cmdAnsiVcoPath);
+	}
+else {	
+	System.log("Writing resource to vCO server : " + cmdAnsiVcoPath);
+	cmdAnsi.writeContentToFile(cmdAnsiVcoPath);
+}]]></script>
+    <in-binding>
+      <bind name="cmdAnsi" type="ResourceElement" export-name="cmdAnsi"/>
+    </in-binding>
+    <out-binding>
+      <bind name="cmdAnsiVcoPath" type="string" export-name="cmdAnsiVcoPath"/>
+    </out-binding>
+    <description><![CDATA[Write cmdAnsi.exe to vCO filesystem]]></description>
+    <position y="91.77272727272727" x="1244.5"/>
+  </workflow-item >
+  <workflow-item  name="item32" out-name="item30" type="task">
+    <display-name><![CDATA[Path for cmdAnsi]]></display-name>
+    <script encoded="false"><![CDATA[cmdAnsiGuestPath = guestTempDirectory+"\\"+cmdAnsi.name;]]></script>
+    <in-binding>
+      <bind name="cmdAnsi" type="ResourceElement" export-name="cmdAnsi"/>
+      <bind name="guestTempDirectory" type="string" export-name="guestTempDirectory"/>
+    </in-binding>
+    <out-binding>
+      <bind name="cmdAnsiGuestPath" type="string" export-name="cmdAnsiGuestPath"/>
+    </out-binding>
+    <position y="91.77272727272727" x="1104.5"/>
+  </workflow-item >
+  <workflow-item  name="item33" throw-bind-name="errorMessage" type="end" end-mode="1">
+    <position y="209.04545454545453" x="384.5"/>
+  </workflow-item >
+  <workflow-item  name="item26" out-name="item27" type="condition" alt-out-name="item4" comparator="0">
+    <display-name><![CDATA[Convert ANSI chars?]]></display-name>
+    <script encoded="false"><![CDATA[//Generated by the system, cannot be edited
+return (useCmdAnsi == true) ;]]></script>
+    <in-binding>
+      <bind name="useCmdAnsi" type="boolean" export-name="useCmdAnsi"/>
+    </in-binding>
+    <condition name="useCmdAnsi" type="boolean" comparator="0" label="null">false</condition>
+    <position y="263.59090909090907" x="1944.5"/>
+  </workflow-item >
+  <workflow-item  name="item27" out-name="item29" type="task">
+    <display-name><![CDATA[Set ansi cmd]]></display-name>
+    <script encoded="false"><![CDATA[scriptProgramPath = "cmd.exe";
+scriptArguments = "/A /C type " + scriptOutputFile + " | cmdansi " + scriptOutputFile;]]></script>
+    <in-binding>
+      <bind name="scriptOutputFile" type="string" export-name="scriptOutputFile"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptArguments" type="string" export-name="scriptArguments"/>
+      <bind name="scriptProgramPath" type="string" export-name="scriptProgramPath"/>
+    </out-binding>
+    <position y="337.2272727272727" x="1944.5"/>
+  </workflow-item >
+  <workflow-item  name="item29" out-name="item4" type="link" linked-workflow-id="C98080808080808080808080808080805E80808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Convert ANSI Output]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="interactiveSession" type="boolean" export-name="interactiveSession">
+        <description><![CDATA[This is set to true if the client wants an interactive session in the guest.]]></description>
+      </bind>
+      <bind name="programPath" type="string" export-name="scriptProgramPath">
+        <description><![CDATA[The absolute path to the program to start. For Linux guest operating systems, /bin/bash is used to start the program.  For Solaris guest operating systems, /bin/bash is used to start the program if it exists. Otherwise /bin/sh is used. If /bin/sh is used, then the process ID returned will be that of the shell used to start the program, rather than the program itself, due to the differences in how /bin/sh and /bin/bash work. This PID will still be usable for watching the process with this API to find its exit code and elapsed time. ]]></description>
+      </bind>
+      <bind name="arguments" type="string" export-name="scriptArguments">
+        <description><![CDATA[The arguments to the program. In Linux and Solaris guest operating systems, the program will be executed by a guest shell. This allows stdio redirection, but may also require that characters which must be escaped to the shell also be escaped on the command line provided. For Windows guest operating systems, prefixing the command with "cmd /c" can provide stdio redirection. ]]></description>
+      </bind>
+      <bind name="workingDirectory" type="string" export-name="scriptWorkingDirectory">
+        <description><![CDATA[The absolute path of the working directory for the program to be run. VMware recommends explicitly setting the working directory for the program to be run. If this value is unset or is an empty string, the behavior depends on the guest operating system. For Linux guest operating systems, if this value is unset or is an empty string, the working directory will be the home directory of the user associated with the guest authentication. For other guest operating systems, if this value is unset, the behavior is unspecified. ]]></description>
+      </bind>
+      <bind name="environment" type="Array/Any" explicitly-not-bound="true" export-name="NULL">
+        <description><![CDATA[An array of environment variables, specified in the guest OS notation (eg PATH=c:\bin;c:\windows\system32 or LD_LIBRARY_PATH=/usr/lib:/lib), to be set for the program being run. Note that these are not additions to the default environment variables; they define the complete set available to the program. If none are specified the values are guest dependent. ]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="number" export-name="scriptPid">
+        <description><![CDATA[The pid of the program started.]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Starts a program in the guest operating system.
+A process started this way can have its status queried with this API. When the process completes, its exit code and end time will be available for 5 minutes after completion.]]></description>
+    <position y="337.2272727272727" x="1804.5"/>
+  </workflow-item >
+  <workflow-item  name="item34" out-name="item23" type="link" linked-workflow-id="C9808080808080808080808080808080DA80808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Create Temp FIle]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="dirPath" type="string" export-name="guestTempDirectory">
+        <description><![CDATA[The complete path to the directory in which to create the new file. If unset or an empty string, a guest-specific location will be used.]]></description>
+      </bind>
+      <bind name="prefix" type="string" export-name="scriptOutputPrefix">
+        <description><![CDATA[The prefix to be given to the new temporary file]]></description>
+      </bind>
+      <bind name="suffix" type="string" export-name="powershellSuffix">
+        <description><![CDATA[The suffix to be given to the new temporary file]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="string" export-name="powershellScriptGuestPath">
+        <description><![CDATA[The absolute path of the temporary file that is created.]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Create a temporary powershell file in guest]]></description>
+    <position y="155.4090909090909" x="684.5"/>
+  </workflow-item >
+  <workflow-item  name="item35" out-name="item32" type="link" linked-workflow-id="C78080808080808080808080808080809480808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Copy file from vCO to guest]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="vcoPath" type="string" export-name="powershellScriptVcoPath">
+        <description><![CDATA[Path on vCO server]]></description>
+      </bind>
+      <bind name="guestFilePath" type="string" export-name="powershellScriptGuestPath">
+        <description><![CDATA[Guest file path]]></description>
+      </bind>
+      <bind name="overwrite" type="boolean" export-name="overwrite">
+        <description><![CDATA[Overwrite file if exists]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="boolean" export-name="vcoCopiedFileResult">
+        <description><![CDATA[Set to true if copy operation was successful]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Copies the specified file from the vCO server to the guest file system.]]></description>
+    <position y="155.4090909090909" x="1104.5"/>
+  </workflow-item >
+  <workflow-item  name="item36" out-name="item35" type="task">
+    <display-name><![CDATA[Save script to vCO]]></display-name>
+    <script encoded="false"><![CDATA[powershellScriptVcoPath = System.getTempDirectory() + "/" + System.nextUUID();
+
+var fileWriter = new FileWriter(powershellScriptVcoPath);
+fileWriter.open();
+fileWriter.clean();
+fileWriter.write(powershellScript);
+fileWriter.close();]]></script>
+    <in-binding>
+      <bind name="powershellScript" type="string" export-name="powershellScript"/>
+    </in-binding>
+    <out-binding>
+      <bind name="powershellScriptVcoPath" type="string" export-name="powershellScriptVcoPath"/>
+    </out-binding>
+    <position y="155.4090909090909" x="964.5"/>
+  </workflow-item >
+  <workflow-item  name="item8" type="end" end-mode="0">
+    <position y="327.2272727272727" x="1284.5"/>
+  </workflow-item >
+  <workflow-item  name="item38" prototype-id="system-log" out-name="item31" type="task" interaction="l">
+    <display-name><![CDATA[System log]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+System.log(text);
+]]></script>
+    <in-binding>
+      <bind name="text" type="String" export-name="errorCode">
+        <description><![CDATA[The text to log]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Log the input text to the console log with level 'log']]></description>
+    <position y="337.2272727272727" x="1524.5"/>
+  </workflow-item >
+  <workflow-item  name="item40" out-name="item11" catch-name="item5" throw-bind-name="errorCode" type="task">
+    <display-name><![CDATA[Error Checking]]></display-name>
+    <script encoded="false"><![CDATA[if (errorCode.indexOf("Failed to authenticate") > -1) {
+	var message = "Failed to authenticate with the guest operating system, this workflow will now terminate.";
+	System.error(message);
+	Server.error(message);
+	throw message;
+}
+
+else if (errorCode.indexOf("The guest operating agent could not be contacted") > -1) { var message = "Retrieving the process list failed, cycling back into the loop"; }
+else { var message = "Unknown error. The error handler passed the following output: "+errorCode; }
+System.warn(message);
+Server.warn(message);
+]]></script>
+    <in-binding>
+      <bind name="errorCode" type="string" export-name="errorCode"/>
+    </in-binding>
+    <out-binding/>
+    <position y="91.77272727272727" x="1524.5"/>
+  </workflow-item >
+  <workflow-item  name="item41" out-name="item17" catch-name="item33" throw-bind-name="errorCode" type="link" linked-workflow-id="C9808080808080808080808080808080CA80808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Make Temp Dir in VM]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="dirPath" type="string" explicitly-not-bound="true" export-name="NULL">
+        <description><![CDATA[The complete path to the directory in which to create the new directory. If unset or an empty string, a guest-specific location will be used.]]></description>
+      </bind>
+      <bind name="prefix" type="string" explicitly-not-bound="true" export-name="NULL">
+        <description><![CDATA[The prefix to be given to the new temporary directory]]></description>
+      </bind>
+      <bind name="suffix" type="string" explicitly-not-bound="true" export-name="NULL">
+        <description><![CDATA[The suffix to be given to the new temporary directory]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="string" export-name="guestTempDirectory">
+        <description><![CDATA[The absolute path of the temporary directory that is created.]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Create a temporary directory in a guest virtual machine.]]></description>
+    <position y="28.136363636363633" x="264.5"/>
+  </workflow-item >
+  <workflow-item  name="item31" out-name="item8" catch-name="item9" throw-bind-name="errorCode" type="link" linked-workflow-id="C98080808080808080808080808080808280808001322751030482b80adf61e7c">
+    <display-name><![CDATA[Delete Directory]]></display-name>
+    <in-binding>
+      <bind name="vmUsername" type="string" export-name="username">
+        <description><![CDATA[Username for the virtual machine]]></description>
+      </bind>
+      <bind name="vmPassword" type="SecureString" export-name="password">
+        <description><![CDATA[Password for the virtual machine]]></description>
+      </bind>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm">
+        <description><![CDATA[Virtual machine]]></description>
+      </bind>
+      <bind name="dirPath" type="string" export-name="guestTempDirectory">
+        <description><![CDATA[Guest path]]></description>
+      </bind>
+      <bind name="recirsive" type="boolean" export-name="recirsive">
+        <description><![CDATA[Delete directory content recursively]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="result" type="boolean" explicitly-not-bound="true" export-name="NULL">
+        <description><![CDATA[Set to true if directory was created successfully]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Delete a directory in a guest virtual machine.]]></description>
+    <position y="273.59090909090907" x="1384.5"/>
+  </workflow-item >
+  <workflow-item  name="item9" prototype-id="system-log" out-name="item8" type="task" interaction="l">
+    <display-name><![CDATA[System log]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+System.log(text);
+]]></script>
+    <in-binding>
+      <bind name="text" type="String" export-name="errorCode">
+        <description><![CDATA[The text to log]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Log the input text to the console log with level 'log']]></description>
+    <position y="337.2272727272727" x="1385.0"/>
+  </workflow-item >
+  <workflow-item  name="item37" out-name="item1" type="link" linked-workflow-id="7ced6eda-298e-4d62-9811-7cb9c61f382b">
+    <display-name><![CDATA[Improved Sleep]]></display-name>
+    <in-binding>
+      <bind name="delay" type="number" export-name="delay">
+        <description><![CDATA[Time to wait (seconds)]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <position y="91.77272727272727" x="1665.0"/>
+  </workflow-item >
+  <presentation>
+    <desc><![CDATA[Run Script in Guest OS]]></desc>
+    <p-step>
+      <title><![CDATA[Run a script]]></title>
+      <p-group>
+        <title><![CDATA[Virtual Machine Information]]></title>
+        <p-param name="vm">
+          <desc><![CDATA[Virtual Machine]]></desc>
+          <p-qual kind="static" name="mandatory" type="boolean"><![CDATA[false]]></p-qual>
+        </p-param>
+        <p-param name="username">
+          <desc><![CDATA[Guest OS Username]]></desc>
+          <p-qual kind="static" name="mandatory" type="boolean"><![CDATA[true]]></p-qual>
+        </p-param>
+        <p-param name="password">
+          <desc><![CDATA[Guest OS Password]]></desc>
+          <p-qual kind="static" name="mandatory" type="boolean"><![CDATA[false]]></p-qual>
+        </p-param>
+      </p-group>
+      <p-group>
+        <title><![CDATA[Script]]></title>
+        <p-param name="scriptType">
+          <desc><![CDATA[Script Type (bash, batch, powershell)]]></desc>
+          <p-qual kind="static" name="mandatory" type="boolean"><![CDATA[true]]></p-qual>
+          <p-qual kind="static" name="genericEnumeration" type="Array/string"><![CDATA[#{#string#batch#;#string#bash#;#string#powershell#}#]]></p-qual>
+        </p-param>
+        <p-param name="script">
+          <desc><![CDATA[Script]]></desc>
+          <p-qual kind="static" name="textInput" type="void"><![CDATA[__NULL__]]></p-qual>
+          <p-qual kind="static" name="mandatory" type="boolean"><![CDATA[true]]></p-qual>
+        </p-param>
+        <p-param name="scriptTimeout">
+          <desc><![CDATA[Timeout for the running script (in second)]]></desc>
+          <p-qual kind="static" name="minNumberValue" type="Number"><![CDATA[5.0]]></p-qual>
+          <p-qual kind="static" name="defaultValue" type="number"><![CDATA[120.0]]></p-qual>
+        </p-param>
+        <p-param name="scriptRefreshTime">
+          <desc><![CDATA[(default) Time (in seconds) where a check of script status occurs]]></desc>
+        </p-param>
+        <p-param name="interactiveSession">
+          <desc><![CDATA[Script context interactivity]]></desc>
+          <p-qual kind="static" name="defaultValue" type="boolean"><![CDATA[__NULL__]]></p-qual>
+        </p-param>
+        <p-param name="scriptWorkingDirectory">
+          <desc><![CDATA[(optional) Script working directory in the guest]]></desc>
+        </p-param>
+      </p-group>
+    </p-step>
+  </presentation>
+</workflow>

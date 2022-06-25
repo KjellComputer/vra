@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getExtension" result-type="string" api-version="6.0.0" id="042ece5f-cf9c-4b86-96c3-4f8626800849" version="0.0.0" allowed-operations="evf" category-name="com.vmware.pso.helpers">
+  <param n="path" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[//From C# : System.IO.Path.GetExtension
+if (path == null)
+{
+	return null;
+}
+var length = path.length;
+var num = length;
+while (--num >= 0)
+{
+	var c = path[num];
+	if (c == '.')
+	{
+		if (num != length - 1)
+		{
+			return path.substring(num, length);
+		}
+		return "";
+	}
+	else
+	{
+		if (c == "/" || c == "\\" || c == ":")
+		{
+			break;
+		}
+	}
+}
+return "";
+]]></script>
+</dunes-script-module>

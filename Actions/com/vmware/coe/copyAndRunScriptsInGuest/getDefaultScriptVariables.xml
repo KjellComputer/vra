@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getDefaultScriptVariables" result-type="Array/Any" api-version="6.0.0" id="ddb1dc5c-5237-4d50-9d02-1de19cb3ac0a" version="0.0.1" allowed-operations="evf" category-name="com.vmware.coe.copyAndRunScriptsInGuest">
+  <description><![CDATA[Return an array of composite type with keys stringToReplace, replacingString populating string to replace from strings between square brackets]]></description>
+  <param n="scriptsConfiguration" t="Array/CompositeType(scriptName:string,resourceElement:ResourceElement,interactiveSession:boolean,programPath:string,arguments:string,workingDirectory:string):scriptConfiguration"><![CDATA[]]></param>
+  <param n="scriptConfigurationName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var array = new Array();
+
+var scriptConfiguration= System.getModule("com.vmware.coe.copyAndRunScriptsInGuest").getScriptConfigurationByName(scriptsConfiguration,scriptConfigurationName) ;
+System.log(scriptConfiguration);
+
+var re = scriptConfiguration.get("resourceElement");
+System.log(re);
+
+
+if (re != null) {
+	var string = re.getContentAsMimeAttachment().content;
+	var keys = string.match(/\[(.*?)\]/g);
+	System.log(keys);
+	for each (var key in keys) {
+		var p = new Properties();
+		p.put("stringToReplace", key);
+		p.put("replacingString", "");
+		array.push(p);
+	}	
+}
+
+return array;]]></script>
+</dunes-script-module>

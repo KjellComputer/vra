@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="setResourceElementAttributesFromProperties" result-type="void" api-version="6.0.0" id="4524c2e9-d176-45f6-83bc-13dd90c0545c" version="0.0.1" allowed-operations="evf" category-name="com.vmware.coe.library.resourceElements">
+  <param n="resourceElement" t="ResourceElement"><![CDATA[]]></param>
+  <param n="prop" t="Properties"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var mimeAttachment = new MimeAttachment();
+mimeAttachment.content = Server.toStringRepresentation(prop).stringValue;
+mimeAttachment.mimeType = "text/plain";
+mimeAttachment.name = resourceElement.name;
+resourceElement.setContentFromMimeAttachment(mimeAttachment);]]></script>
+</dunes-script-module>
