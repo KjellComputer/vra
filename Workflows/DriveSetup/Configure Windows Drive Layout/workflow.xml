@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="09c4951f-5438-4c7d-bf87-61fa9e57c4b9" editor-version="2.0" version="0.0.1" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Configure Windows Drive Layout</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="inputProperties" type="Properties">
+            <description>vRA Input Properties from deployment</description>
+        </param>
+    </input>
+    <output>
+        <param name="diskcommandResult" type="Array/number"/>
+    </output>
+    <attrib name="deploymentId" type="string">
+        <value encoded="n"></value>
+        <description>The deployment ID from vRA deployment</description>
+    </attrib>
+    <attrib name="REST_UserName" type="string" conf-id="a49fe5aa-66ae-40c3-8840-1eb33a02e3f4" conf-key="userName"/>
+    <attrib name="REST_Password" type="SecureString" conf-id="a49fe5aa-66ae-40c3-8840-1eb33a02e3f4" conf-key="password"/>
+    <attrib name="REST_Domain" type="string" conf-id="a49fe5aa-66ae-40c3-8840-1eb33a02e3f4" conf-key="domain"/>
+    <attrib name="statusCode" type="number">
+        <value encoded="n"/>
+        <description>Response status code</description>
+    </attrib>
+    <attrib name="contentLength" type="number">
+        <value encoded="n"/>
+        <description>Response content length</description>
+    </attrib>
+    <attrib name="headers" type="Properties">
+        <value encoded="n"/>
+        <description>Response headers</description>
+    </attrib>
+    <attrib name="contentAsString" type="string">
+        <value encoded="n"></value>
+        <description>Response content as string</description>
+    </attrib>
+    <attrib name="apiToken" type="string">
+        <value encoded="n"></value>
+    </attrib>
+    <attrib name="diskProperties" type="Array/Any">
+        <value encoded="n">[]</value>
+        <description>Informastion about the disk properties from the vRA Deployment</description>
+    </attrib>
+    <attrib name="virtualMachine" type="VC:VirtualMachine">
+        <value encoded="n"/>
+    </attrib>
+    <attrib name="Windows_UserName" type="string" conf-id="1861d5c1-713a-4036-9b5e-8eb77ef3f774" conf-key="userName"/>
+    <attrib name="Windows_Password" type="SecureString" conf-id="1861d5c1-713a-4036-9b5e-8eb77ef3f774" conf-key="password"/>
+    <attrib name="diskObjectIds" type="Array/Any">
+        <value encoded="n">[]</value>
+    </attrib>
+    <attrib name="diskResources" type="Array/Any">
+        <value encoded="n">[]</value>
+    </attrib>
+    <attrib name="diskCommands" type="Array/string">
+        <value encoded="n"/>
+    </attrib>
+    <attrib name="interactiveSession" type="boolean">
+        <value encoded="n">false</value>
+    </attrib>
+    <attrib name="powershellPath" type="string">
+        <value encoded="n">C:\Windows\system32\WindowsPowerShell\v1.0\powershell.exe</value>
+    </attrib>
+    <attrib name="workingDirectory" type="string">
+        <value encoded="n"></value>
+    </attrib>
+    <attrib name="environment" type="Array/string">
+        <value encoded="n"/>
+    </attrib>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="360.0" x="360.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item7" type="task" comparator="0">
+        <display-name>Set Variables</display-name>
+        <script encoded="false">var customProperties = inputProperties.get("customProperties");&#13;
+var vcUuid = customProperties.get("vcUuid");&#13;
+var providerId = inputProperties.get("externalIds")[0];&#13;
+&#13;
+deploymentId = inputProperties.deploymentId;&#13;
+virtualMachine = System.getModule("com.vmware.vra.xaas").findVcVmByVcAndVmUuid(vcUuid, providerId);</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding>
+            <bind name="deploymentId" type="string" export-name="deploymentId"/>
+            <bind name="virtualMachine" type="VC:VirtualMachine" export-name="virtualMachine"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="180.0"/>
+    </workflow-item>
+    <workflow-item name="item2" out-name="item9" type="link" linked-workflow-id="989be57e-a463-41e4-8545-e9fcf965e3f0" comparator="0">
+        <display-name>Get vRA API Token</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="username" type="string" export-name="REST_UserName">
+                <description>username</description>
+            </bind>
+            <bind name="password" type="SecureString" export-name="REST_Password">
+                <description>password</description>
+            </bind>
+            <bind name="domain" type="string" export-name="REST_Domain">
+                <description>domain</description>
+            </bind>
+        </in-binding>
+        <out-binding>
+            <bind name="statusCode" type="number" export-name="statusCode">
+                <description>Response status code</description>
+            </bind>
+            <bind name="contentLength" type="number" export-name="contentLength">
+                <description>Response content length</description>
+            </bind>
+            <bind name="headers" type="Properties" export-name="headers">
+                <description>Response headers</description>
+            </bind>
+            <bind name="contentAsString" type="string" export-name="contentAsString">
+                <description>Response content as string</description>
+            </bind>
+            <bind name="apiToken" type="string" export-name="apiToken"/>
+        </out-binding>
+        <description> </description>
+        <position y="130.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item5" out-name="item6" type="task" comparator="0">
+        <display-name>Build Disk Input properties Array</display-name>
+        <script encoded="false">var restResponse = JSON.parse(contentAsString);&#13;
+var diskProperties = new Array();&#13;
+&#13;
+for each (diskProperty in restResponse.inputs.diskProperties) {&#13;
+    diskProperties.push(JSON.parse(JSON.stringify(diskProperty)));&#13;
+}</script>
+        <in-binding>
+            <bind name="contentAsString" type="string" export-name="contentAsString"/>
+        </in-binding>
+        <out-binding>
+            <bind name="diskProperties" type="Array/Any" export-name="diskProperties"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="210.0" x="180.0"/>
+    </workflow-item>
+    <workflow-item name="item6" out-name="item10" type="link" linked-workflow-id="06523bd4-23fd-47ba-81d1-484b692ff677" comparator="0">
+        <display-name>Get vRA Deployment Resources</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="deploymentId" type="string" export-name="deploymentId">
+                <description>deploymentId</description>
+            </bind>
+            <bind name="apiToken" type="string" export-name="apiToken"/>
+        </in-binding>
+        <out-binding>
+            <bind name="statusCode" type="number" export-name="statusCode">
+                <description>Response status code</description>
+            </bind>
+            <bind name="contentLength" type="number" export-name="contentLength">
+                <description>Response content length</description>
+            </bind>
+            <bind name="headers" type="Properties" export-name="headers">
+                <description>Response headers</description>
+            </bind>
+            <bind name="contentAsString" type="string" export-name="contentAsString">
+                <description>Response content as string</description>
+            </bind>
+        </out-binding>
+        <description> </description>
+        <position y="210.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item7" out-name="item2" type="task" comparator="0">
+        <display-name>Gather VM DiskObjectIds</display-name>
+        <script encoded="false">var diskObjectIds = new Array();&#13;
+&#13;
+for each (device in virtualMachine.config.hardware.device) {&#13;
+    if (device.DiskObjectId) {&#13;
+        diskObjectIds.push(device);&#13;
+    }&#13;
+}</script>
+        <in-binding>
+            <bind name="virtualMachine" type="VC:VirtualMachine" export-name="virtualMachine"/>
+        </in-binding>
+        <out-binding>
+            <bind name="diskObjectIds" type="Array/Any" export-name="diskObjectIds"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item9" out-name="item5" type="link" linked-workflow-id="61f99af5-3619-4f81-8ef4-0674fa75b028" comparator="0">
+        <display-name>Get vRA Deployment Inputs</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="deploymentId" type="string" export-name="deploymentId">
+                <description>deploymentId</description>
+            </bind>
+            <bind name="apiToken" type="string" export-name="apiToken"/>
+        </in-binding>
+        <out-binding>
+            <bind name="statusCode" type="number" export-name="statusCode">
+                <description>Response status code</description>
+            </bind>
+            <bind name="contentLength" type="number" export-name="contentLength">
+                <description>Response content length</description>
+            </bind>
+            <bind name="headers" type="Properties" export-name="headers">
+                <description>Response headers</description>
+            </bind>
+            <bind name="contentAsString" type="string" export-name="contentAsString">
+                <description>Response content as string</description>
+            </bind>
+        </out-binding>
+        <description> </description>
+        <position y="130.0" x="180.0"/>
+    </workflow-item>
+    <workflow-item name="item10" out-name="item11" type="task" comparator="0">
+        <display-name>Build Deployment Resources Array</display-name>
+        <script encoded="false">var jsonResponse = JSON.parse(contentAsString);&#13;
+var diskResources = new Array();&#13;
+&#13;
+for each (var item in jsonResponse.content) {&#13;
+    if (JSON.stringify(item.type) == '"Cloud.vSphere.Disk"') {&#13;
+        diskResources.push(JSON.parse(JSON.stringify(item.properties)));&#13;
+    }&#13;
+}</script>
+        <in-binding>
+            <bind name="contentAsString" type="string" export-name="contentAsString"/>
+        </in-binding>
+        <out-binding>
+            <bind name="diskResources" type="Array/Any" export-name="diskResources"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="280.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item11" out-name="item12" type="task" comparator="0">
+        <display-name>Create Windows Commands</display-name>
+        <script encoded="false">var diskCommands = new Array();&#13;
+&#13;
+for (var i = 0; i &lt; (diskResources.length); i += 1) {&#13;
+    for each (device in diskObjectIds) {&#13;
+        if (diskResources[i].providerId == device.DiskObjectId) {&#13;
+            var Uuid = String(device.Backing.Uuid).replace(/-/g,"");&#13;
+            var command = "-Command " + '"&amp; ' + "{Get-Disk -UniqueId " + Uuid + " | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -DriveLetter " + diskProperties[i].driveLetter + " -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel " + "'" + diskProperties[i].driveLabel + "'" + "}" + '"'&#13;
+            diskCommands.push(command)&#13;
+            System.log(command)&#13;
+        }&#13;
+    }&#13;
+}</script>
+        <in-binding>
+            <bind name="diskObjectIds" type="Array/Any" export-name="diskObjectIds"/>
+            <bind name="diskProperties" type="Array/Any" export-name="diskProperties"/>
+            <bind name="diskResources" type="Array/Any" export-name="diskResources"/>
+        </in-binding>
+        <out-binding>
+            <bind name="diskCommands" type="Array/string" export-name="diskCommands"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="280.0" x="180.0"/>
+    </workflow-item>
+    <workflow-item name="item12" out-name="item0" type="foreach" comparator="0">
+        <display-name>Run program in guest</display-name>
+        <in-binding>
+            <bind name="vmUsername" type="string" export-name="Windows_UserName">
+                <description>Username for the virtual machine</description>
+            </bind>
+            <bind name="vmPassword" type="SecureString" export-name="Windows_Password">
+                <description>Password for the virtual machine</description>
+            </bind>
+            <bind name="vm" type="VC:VirtualMachine" export-name="virtualMachine">
+                <description>Virtual machine</description>
+            </bind>
+            <bind name="interactiveSession" type="boolean" export-name="interactiveSession">
+                <description>This is set to true if the client wants an interactive session in the guest.</description>
+            </bind>
+            <bind name="programPath" type="string" export-name="powershellPath">
+                <description>The absolute path to the program to start. For Linux guest operating systems, /bin/bash is used to start the program.  For Solaris guest operating systems, /bin/bash is used to start the program if it exists. Otherwise /bin/sh is used. If /bin/sh is used, then the process ID returned will be that of the shell used to start the program, rather than the program itself, due to the differences in how /bin/sh and /bin/bash work. This PID will still be usable for watching the process with this API to find its exit code and elapsed time. </description>
+            </bind>
+            <bind name="arguments" type="Array/string" export-name="*diskCommands">
+                <description>The arguments to the program. In Linux and Solaris guest operating systems, the program will be executed by a guest shell. This allows stdio redirection, but may also require that characters which must be escaped to the shell also be escaped on the command line provided. For Windows guest operating systems, prefixing the command with "cmd /c" can provide stdio redirection. </description>
+            </bind>
+            <bind name="workingDirectory" type="string" export-name="workingDirectory">
+                <description>The absolute path of the working directory for the program to be run. VMware recommends explicitly setting the working directory for the program to be run. If this value is unset or is an empty string, the behavior depends on the guest operating system. For Linux guest operating systems, if this value is unset or is an empty string, the working directory will be the home directory of the user associated with the guest authentication. For other guest operating systems, if this value is unset, the behavior is unspecified. </description>
+            </bind>
+            <bind name="environment" type="Array/string" export-name="environment">
+                <description>An array of environment variables, specified in the guest OS notation (eg PATH=c:\bin;c:\windows\system32 or LD_LIBRARY_PATH=/usr/lib:/lib), to be set for the program being run. Note that these are not additions to the default environment variables; they define the complete set available to the program. If none are specified the values are guest dependent. </description>
+            </bind>
+        </in-binding>
+        <out-binding>
+            <bind name="result" type="Array/number" export-name="*diskcommandResult"/>
+        </out-binding>
+        <reference id="C98080808080808080808080808080805E80808001322751030482b80adf61e7c" type="Workflow"/>
+        <position y="370.0" x="180.0"/>
+    </workflow-item>
+</ns2:workflow>
