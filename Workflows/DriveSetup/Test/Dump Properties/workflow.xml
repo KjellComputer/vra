@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="a715fe2e-97f0-4af6-b2da-ab3f4a42d434" editor-version="2.0" version="0.0.1" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Dump Properties</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="inputProperties" type="Properties"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="660.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">function dumpProperties(props,lvl){&#13;
+         var keys = props.keys;&#13;
+         var prefix = ""&#13;
+     for (var i=0; i&lt;lvl; i++){&#13;
+                   prefix = prefix + "";&#13;
+          }&#13;
+          for (k in keys){&#13;
+                 var key = keys[k];&#13;
+                 var value = props.get(keys[k])&#13;
+                 if ("Properties" == System.getObjectType(value)){&#13;
+                  System.log(prefix + key + "[")&#13;
+                  dumpProperties(value,(lvl+2));&#13;
+                  System.log(prefix+ "]")&#13;
+                 } else{&#13;
+                   System.log( prefix + key + ":" + value)&#13;
+                 }&#13;
+                 }&#13;
+   }&#13;
+&#13;
+   dumpProperties(inputProperties, 0)&#13;
+&#13;
+   customProps = inputProperties.get("customProperties")</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="260.0"/>
+    </workflow-item>
+</ns2:workflow>
