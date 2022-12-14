@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<package>
-<description><![CDATA[Provisioning Additional Disks with vRA8
-
-When creating blueprints containing multiple attached disks to one or more compute resources, vRA8 automates the provisioning and attachment of those disks.  However, vRA does not guarantee that the order of disk requests matches the order of the disks attached to the VM. 
-https://confluence.pscoe.vmware.com/display/KB/2020/04/10/Provisioning+Additional+Disks+with+vRA8]]></description>
-<elm src-category='null'><![CDATA[dunes://service.dunes.ch/Workflow?id='456e0e30-d0f8-477e-83b6-402d572b2460'&dunesName='Workflow']]></elm>
-<used-plugin name='VC' version='6.5.0' />
-</package>
