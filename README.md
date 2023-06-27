@@ -8,3 +8,6 @@ vRealize Automation
 
 
 <img width="1057" alt="3  Configure" src="https://github.com/KjellComputer/vra/assets/108197286/1cf27ef9-c885-4ac9-a52b-b90832f10d33">
+
+
+<img width="1129" alt="4  event" src="https://github.com/KjellComputer/vra/assets/108197286/6aeb77ba-7f20-4bc1-921d-f350a431d118">
