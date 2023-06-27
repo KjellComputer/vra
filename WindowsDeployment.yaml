@@ -1,0 +1,125 @@
+formatVersion: 1
+inputs:
+  datacenter:
+    type: string
+    title: Datacenter
+    oneOf:
+      - title: Grimstad
+        const: gtd
+      - title: Arendal
+        const: adl
+      - title: Froland
+        const: fad
+  customer:
+    type: string
+    title: Customer
+    oneOf:
+      - title: Kjell Computer
+        const: kc
+      - title: Oddensenteret
+        const: os
+      - title: Kiwi Grimstad
+        const: kg
+  serviceType:
+    type: string
+    title: Service
+    oneOf:
+      - title: Application
+        const: ap
+      - title: Webserver
+        const: ws
+      - title: Database
+        const: db
+  serviceName:
+    type: string
+    title: ServiceName
+  diskProperties:
+    type: array
+    minItems: 0
+    maxItems: 10
+    items:
+      type: object
+      properties:
+        size:
+          type: integer
+          title: Size (GB)
+        SCSIController:
+          type: string
+          title: SCSI Controller
+          default: SCSI_Controller_0
+          enum:
+            - SCSI_Controller_0
+            - SCSI_Controller_1
+            - SCSI_Controller_2
+            - SCSI_Controller_3
+        unitNumber:
+          type: integer
+          title: Unit Number (optional)
+        driveLetter:
+          type: string
+          title: Drive Letter
+          enum:
+            - D
+            - E
+            - F
+            - G
+            - H
+            - I
+            - J
+            - K
+            - L
+            - M
+            - 'N'
+            - O
+            - P
+            - Q
+            - R
+            - S
+            - T
+            - U
+            - V
+            - W
+            - X
+            - 'Y'
+            - Z
+        driveLabel:
+          type: string
+          title: Drive Label (optional)
+          default: Local disk
+resources:
+  Cloud_SaltStack_1:
+    type: Cloud.SaltStack
+    properties:
+      hosts:
+        - ${resource.Cloud_Machine_1.id}
+      masterId: saltstack_enterprise_installer
+      stateFiles:
+        - /momagent/init.sls
+      saltEnvironment: base
+  Cloud_Machine_1:
+    type: Cloud.vSphere.Machine
+    properties:
+      name: ${input.datacenter}-${to_lower(substring(split(input.serviceName, '-')[1], 0, 3))}${input.serviceType}${input.customer}
+      image: Windows Server 2022 Desktop
+      flavor: Default
+      customizationSpec: Windows Server 2022
+      networks:
+        - network: ${resource.Cloud_vSphere_Network_1.id}
+          assignment: static
+      attachedDisks: ${map_to_object(resource.disk[*].id, "source")}
+      remoteAccess:
+        authentication: usernamePassword
+        username: administrator
+        password: '***************'
+  Cloud_vSphere_Network_1:
+    type: Cloud.vSphere.Network
+    properties:
+      networkType: existing
+  disk:
+    type: Cloud.vSphere.Disk
+    allocatePerInstance: true
+    properties:
+      capacityGb: ${input.diskProperties[count.index].size}
+      SCSIController: ${input.diskProperties[count.index].SCSIController}
+      unitNumber: ${input.diskProperties[count.index].unitNumber}
+      count: ${length(input.diskProperties)}
